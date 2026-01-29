@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 
-/// App Colors for Protectra - Task Management Application
-/// Professional color scheme optimized for task management UI
+/// App Colors for Protectra - Safety Device Companion Application
+/// Professional color scheme optimized for safety and security UI
 class AppColors {
   AppColors._();
 
-  // Primary Colors - Professional Blue
-  static const Color primary = Color(0xFF2563EB);
-  static const Color primaryLight = Color(0xFF60A5FA);
-  static const Color primaryDark = Color(0xFF1D4ED8);
-  static const Color primarySurface = Color(0xFFEFF6FF);
+  // Primary Colors - Safety Blue
+  static const Color primary = Color(0xFF0EA5E9);
+  static const Color primaryLight = Color(0xFF38BDF8);
+  static const Color primaryDark = Color(0xFF0284C7);
+  static const Color primarySurface = Color(0xFFE0F2FE);
 
-  // Secondary Colors - Teal/Green for success/completion
-  static const Color secondary = Color(0xFF10B981);
-  static const Color secondaryLight = Color(0xFF34D399);
-  static const Color secondaryDark = Color(0xFF059669);
-  static const Color secondarySurface = Color(0xFFECFDF5);
+  // Secondary Colors - Teal for safety/secure status
+  static const Color secondary = Color(0xFF14B8A6);
+  static const Color secondaryLight = Color(0xFF2DD4BF);
+  static const Color secondaryDark = Color(0xFF0D9488);
+  static const Color secondarySurface = Color(0xFFCCFBF1);
 
-  // Accent Colors - Purple for highlights
-  static const Color accent = Color(0xFF8B5CF6);
-  static const Color accentLight = Color(0xFFA78BFA);
-  static const Color accentDark = Color(0xFF7C3AED);
-  static const Color accentSurface = Color(0xFFF5F3FF);
+  // Accent Colors - Coral for alerts
+  static const Color accent = Color(0xFFF97316);
+  static const Color accentLight = Color(0xFFFDBA74);
+  static const Color accentDark = Color(0xFFEA580C);
+  static const Color accentSurface = Color(0xFFFFEDD5);
 
   // Neutral Colors - Gray scale
   static const Color neutral50 = Color(0xFFF9FAFB);
@@ -52,18 +52,18 @@ class AppColors {
   static const Color infoLight = Color(0xFFDBEAFE);
   static const Color infoDark = Color(0xFF1E40AF);
 
-  // Task Priority Colors
-  static const Color priorityLow = Color(0xFF10B981);
-  static const Color priorityMedium = Color(0xFFF59E0B);
-  static const Color priorityHigh = Color(0xFFEF4444);
-  static const Color priorityUrgent = Color(0xFFDC2626);
+  // Danger Level Colors
+  static const Color dangerLevel1 = Color(0xFFFBBF24); // Low - Amber
+  static const Color dangerLevel2 = Color(0xFFF97316); // Medium - Orange
+  static const Color dangerLevel3 = Color(0xFFEF4444); // High - Red
+  static const Color dangerCritical = Color(0xFFDC2626); // Critical - Dark Red
 
-  // Task Status Colors
-  static const Color statusTodo = Color(0xFF9CA3AF);
-  static const Color statusInProgress = Color(0xFF3B82F6);
-  static const Color statusReview = Color(0xFFF59E0B);
-  static const Color statusDone = Color(0xFF10B981);
-  static const Color statusBlocked = Color(0xFFEF4444);
+  // Status Colors
+  static const Color statusSafe = Color(0xFF10B981);
+  static const Color statusWarning = Color(0xFFF59E0B);
+  static const Color statusDanger = Color(0xFFEF4444);
+  static const Color statusConnected = Color(0xFF0EA5E9);
+  static const Color statusDisconnected = Color(0xFF6B7280);
 
   // Background Colors
   static const Color background = Color(0xFFFFFFFF);
