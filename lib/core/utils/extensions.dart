@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-/// Extensions for Simbayanan
+/// Extensions for Protectra
 /// Provides useful extensions for various Flutter types
 
 // ==================== STRING EXTENSIONS ====================

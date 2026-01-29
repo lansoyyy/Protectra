@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Custom Spacing Widgets for Simbayanan
+/// Custom Spacing Widgets for Protectra
 /// Provides consistent spacing throughout the application
 
 /// Horizontal Space

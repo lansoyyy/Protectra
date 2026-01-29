@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import '../../theme/app_colors.dart';
 
-/// Custom Loading Indicator for Simbayanan
+/// Custom Loading Indicator for Protectra
 class AppLoader extends StatelessWidget {
   const AppLoader({super.key, this.size = LoaderSize.medium, this.color});
 

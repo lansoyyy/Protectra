@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// App Colors for Simbayanan - Task Management Application
+/// App Colors for Protectra - Task Management Application
 /// Professional color scheme optimized for task management UI
 class AppColors {
   AppColors._();

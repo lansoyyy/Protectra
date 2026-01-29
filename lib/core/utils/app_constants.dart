@@ -1,11 +1,11 @@
-/// App Constants for Simbayanan
+/// App Constants for Protectra
 /// Contains all constant values used throughout the application
 class AppConstants {
   AppConstants._();
 
   // ==================== APP INFO ====================
 
-  static const String appName = 'Simbayanan';
+  static const String appName = 'Protectra';
   static const String appDescription = 'Task Management Application';
 
   // ==================== API ====================

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'app_colors.dart';
 import 'app_text_styles.dart';
 
-/// App Theme Configuration for Simbayanan
+/// App Theme Configuration for Protectra
 /// Provides light and dark theme configurations
 class AppTheme {
   AppTheme._();

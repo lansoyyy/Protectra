@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
-/// App Text Styles for Simbayanan
+/// App Text Styles for Protectra
 /// Using Urbanist font family
 class AppTextStyles {
   AppTextStyles._();

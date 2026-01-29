@@ -39,7 +39,7 @@ class PlaceholderScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Simbayanan',
+              'Protectra',
               style: Theme.of(
                 context,
               ).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.bold),

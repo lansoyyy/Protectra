@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_text_styles.dart';
 
-/// Custom Primary Button for Simbayanan
+/// Custom Primary Button for SiProtectrambayanan
 class AppButton extends StatelessWidget {
   const AppButton({
     super.key,

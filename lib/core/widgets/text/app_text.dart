@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_text_styles.dart';
 
-/// Custom App Text Widget for Simbayanan
+/// Custom App Text Widget for Protectra
 /// Provides consistent text styling using Urbanist fonts
 class AppText extends StatelessWidget {
   const AppText(
