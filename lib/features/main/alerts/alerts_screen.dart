@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/models/alert.dart';
+import '../../../../core/widgets/search/search_bar_widget.dart';
 
 /// Alerts screen for Protectra app
 /// Displays all received safety alerts
@@ -16,11 +17,36 @@ class AlertsScreen extends StatefulWidget {
 class _AlertsScreenState extends State<AlertsScreen> {
   AlertFilter _selectedFilter = AlertFilter.all;
   late List<Alert> _alerts;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _isRefreshing = false;
 
   @override
   void initState() {
     super.initState();
     _initializeMockData();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refreshAlerts() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 1));
+
+    // Re-initialize mock data (in real app, fetch from API)
+    _initializeMockData();
+
+    setState(() {
+      _isRefreshing = false;
+    });
   }
 
   void _initializeMockData() {
@@ -69,18 +95,32 @@ class _AlertsScreenState extends State<AlertsScreen> {
   }
 
   List<Alert> get _filteredAlerts {
+    List<Alert> filtered;
+
     switch (_selectedFilter) {
       case AlertFilter.all:
-        return _alerts;
+        filtered = _alerts;
       case AlertFilter.low:
-        return _alerts.where((a) => a.dangerLevel == 1).toList();
+        filtered = _alerts.where((a) => a.dangerLevel == 1).toList();
       case AlertFilter.medium:
-        return _alerts.where((a) => a.dangerLevel == 2).toList();
+        filtered = _alerts.where((a) => a.dangerLevel == 2).toList();
       case AlertFilter.high:
-        return _alerts.where((a) => a.dangerLevel == 3).toList();
+        filtered = _alerts.where((a) => a.dangerLevel == 3).toList();
       case AlertFilter.unread:
-        return _alerts.where((a) => !a.isRead).toList();
+        filtered = _alerts.where((a) => !a.isRead).toList();
     }
+
+    // Apply search filter
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((alert) {
+        final query = _searchQuery.toLowerCase();
+        return alert.description.toLowerCase().contains(query) ||
+            alert.dangerLevelLabel.toLowerCase().contains(query) ||
+            (alert.deviceId?.toLowerCase().contains(query) ?? false);
+      }).toList();
+    }
+
+    return filtered;
   }
 
   @override
@@ -89,19 +129,45 @@ class _AlertsScreenState extends State<AlertsScreen> {
       appBar: AppBar(title: const Text('Alerts'), elevation: 0),
       body: Column(
         children: [
+          _buildSearchBar(),
           _buildFilterChips(),
           Expanded(
-            child: _filteredAlerts.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _filteredAlerts.length,
-                    itemBuilder: (context, index) {
-                      return _buildAlertCard(_filteredAlerts[index]);
-                    },
-                  ),
+            child: RefreshIndicator(
+              onRefresh: _refreshAlerts,
+              color: AppColors.primary,
+              backgroundColor: AppColors.surface,
+              child: _filteredAlerts.isEmpty
+                  ? _buildEmptyState()
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _filteredAlerts.length,
+                      itemBuilder: (context, index) {
+                        return _buildAlertCard(_filteredAlerts[index]);
+                      },
+                    ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: AppSearchBar(
+        hintText: 'Search alerts...',
+        controller: _searchController,
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+        onClear: () {
+          setState(() {
+            _searchQuery = '';
+          });
+        },
       ),
     );
   }
@@ -148,25 +214,30 @@ class _AlertsScreenState extends State<AlertsScreen> {
   }
 
   Widget _buildEmptyState() {
+    final showSearchMessage = _searchQuery.isNotEmpty;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.notifications_none_rounded,
+            showSearchMessage
+                ? Icons.search_off_rounded
+                : Icons.notifications_none_rounded,
             size: 64,
             color: AppColors.textTertiary,
           ),
           const SizedBox(height: 16),
           Text(
-            'No alerts found',
+            showSearchMessage ? 'No results found' : 'No alerts found',
             style: AppTextStyles.titleMedium.copyWith(
               color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Try selecting a different filter',
+            showSearchMessage
+                ? 'Try different keywords or clear search'
+                : 'Try selecting a different filter',
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textTertiary,
             ),

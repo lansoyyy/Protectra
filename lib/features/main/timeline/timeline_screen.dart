@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/models/event.dart';
+import '../../../../core/widgets/search/search_bar_widget.dart';
 
 /// Timeline screen for Protectra app
 /// Displays chronological safety events and evidence
@@ -16,11 +17,36 @@ class TimelineScreen extends StatefulWidget {
 class _TimelineScreenState extends State<TimelineScreen> {
   late List<SafetyEvent> _events;
   EventFilter _selectedFilter = EventFilter.all;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _isRefreshing = false;
 
   @override
   void initState() {
     super.initState();
     _initializeMockData();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refreshEvents() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 1));
+
+    // Re-initialize mock data (in real app, fetch from API)
+    _initializeMockData();
+
+    setState(() {
+      _isRefreshing = false;
+    });
   }
 
   void _initializeMockData() {
@@ -132,19 +158,21 @@ class _TimelineScreenState extends State<TimelineScreen> {
   }
 
   List<SafetyEvent> get _filteredEvents {
+    List<SafetyEvent> filtered;
+
     switch (_selectedFilter) {
       case EventFilter.all:
-        return _events;
+        filtered = _events;
       case EventFilter.danger:
-        return _events
+        filtered = _events
             .where((e) => e.type == EventType.dangerDetected)
             .toList();
       case EventFilter.alert:
-        return _events.where((e) => e.type == EventType.alertSent).toList();
+        filtered = _events.where((e) => e.type == EventType.alertSent).toList();
       case EventFilter.evidence:
-        return _events.where((e) => e.hasEvidence).toList();
+        filtered = _events.where((e) => e.hasEvidence).toList();
       case EventFilter.device:
-        return _events
+        filtered = _events
             .where(
               (e) =>
                   e.type == EventType.deviceConnected ||
@@ -152,6 +180,20 @@ class _TimelineScreenState extends State<TimelineScreen> {
             )
             .toList();
     }
+
+    // Apply search filter
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((event) {
+        final query = _searchQuery.toLowerCase();
+        final descriptionMatch =
+            event.description?.toLowerCase().contains(query) ?? false;
+        final typeMatch = event.typeLabel.toLowerCase().contains(query);
+        final deviceMatch = event.deviceId.toLowerCase().contains(query);
+        return descriptionMatch || typeMatch || deviceMatch;
+      }).toList();
+    }
+
+    return filtered;
   }
 
   @override
@@ -160,19 +202,48 @@ class _TimelineScreenState extends State<TimelineScreen> {
       appBar: AppBar(title: const Text('Timeline'), elevation: 0),
       body: Column(
         children: [
+          _buildSearchBar(),
           _buildFilterChips(),
           Expanded(
-            child: _filteredEvents.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _filteredEvents.length,
-                    itemBuilder: (context, index) {
-                      return _buildTimelineItem(_filteredEvents[index], index);
-                    },
-                  ),
+            child: RefreshIndicator(
+              onRefresh: _refreshEvents,
+              color: AppColors.primary,
+              backgroundColor: AppColors.surface,
+              child: _filteredEvents.isEmpty
+                  ? _buildEmptyState()
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _filteredEvents.length,
+                      itemBuilder: (context, index) {
+                        return _buildTimelineItem(
+                          _filteredEvents[index],
+                          index,
+                        );
+                      },
+                    ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: AppSearchBar(
+        hintText: 'Search events...',
+        controller: _searchController,
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+        onClear: () {
+          setState(() {
+            _searchQuery = '';
+          });
+        },
       ),
     );
   }

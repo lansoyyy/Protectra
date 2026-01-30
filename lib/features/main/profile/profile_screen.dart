@@ -3,6 +3,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/models/device.dart';
 import '../../../../core/models/contact.dart';
+import '../../../../core/widgets/search/search_bar_widget.dart';
 
 /// Profile/Settings screen for Protectra app
 /// Manages user profile, device settings, and trusted contacts
@@ -18,11 +19,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late List<Contact> _contacts;
   bool _notificationsEnabled = true;
   bool _locationEnabled = true;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _initializeMockData();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Contact> get _filteredContacts {
+    if (_searchQuery.isEmpty) {
+      return _contacts;
+    }
+    return _contacts.where((contact) {
+      final query = _searchQuery.toLowerCase();
+      return contact.name.toLowerCase().contains(query) ||
+          contact.typeLabel.toLowerCase().contains(query) ||
+          (contact.phoneNumber?.toLowerCase().contains(query) ?? false);
+    }).toList();
   }
 
   void _initializeMockData() {
@@ -226,7 +247,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        ..._contacts.map((contact) => _buildContactCard(contact)),
+        AppSearchBar(
+          hintText: 'Search contacts...',
+          controller: _searchController,
+          onChanged: (value) {
+            setState(() {
+              _searchQuery = value;
+            });
+          },
+          onClear: () {
+            setState(() {
+              _searchQuery = '';
+            });
+          },
+        ),
+        const SizedBox(height: 12),
+        ..._filteredContacts.map((contact) => _buildContactCard(contact)),
       ],
     );
   }
