@@ -1,623 +1,278 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/models/device.dart';
-import '../../../../core/models/contact.dart';
-import '../../../../core/widgets/search/search_bar_widget.dart';
+import '../../../../core/models/rtdb_models.dart';
+import '../../../../core/services/rtdb_service.dart';
 
-/// Profile/Settings screen for Protectra app
-/// Manages user profile, device settings, and trusted contacts
-class ProfileScreen extends StatefulWidget {
+/// Status screen – shows live actuator states and last-update timestamps
+/// for every RTDB node of the IoT device.
+class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
-
-  @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  late Device _device;
-  late List<Contact> _contacts;
-  bool _notificationsEnabled = true;
-  bool _locationEnabled = true;
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeMockData();
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  List<Contact> get _filteredContacts {
-    if (_searchQuery.isEmpty) {
-      return _contacts;
-    }
-    return _contacts.where((contact) {
-      final query = _searchQuery.toLowerCase();
-      return contact.name.toLowerCase().contains(query) ||
-          contact.typeLabel.toLowerCase().contains(query) ||
-          (contact.phoneNumber?.toLowerCase().contains(query) ?? false);
-    }).toList();
-  }
-
-  void _initializeMockData() {
-    _device = Device.mock(batteryLevel: 78, status: DeviceStatus.connected);
-    _contacts = [
-      Contact.mock(
-        name: 'Maria Santos',
-        phoneNumber: '+639123456789',
-        type: ContactType.parent,
-        isEmergencyContact: true,
-      ),
-      Contact.mock(
-        name: 'Juan Reyes',
-        phoneNumber: '+639876543210',
-        type: ContactType.friend,
-        isEmergencyContact: true,
-      ),
-      Contact.mock(
-        name: 'Ana Cruz',
-        phoneNumber: '+639555555555',
-        type: ContactType.guardian,
-        isEmergencyContact: false,
-      ),
-    ];
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile'), elevation: 0),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildUserProfile(),
-          const SizedBox(height: 24),
-          _buildDeviceSection(),
-          const SizedBox(height: 24),
-          _buildContactsSection(),
-          const SizedBox(height: 24),
-          _buildSettingsSection(),
-          const SizedBox(height: 24),
-          _buildAppInfo(),
-        ],
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        title: Text('Status', style: AppTextStyles.titleLarge),
+        centerTitle: false,
       ),
-    );
-  }
-
-  Widget _buildUserProfile() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primaryLight, AppColors.primary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: AppColors.textInverse.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.textInverse, width: 3),
-            ),
-            child: ClipOval(
-              child: Image.asset(
-                'assets/images/user (1).png',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(
-                    Icons.person_rounded,
-                    size: 40,
-                    color: AppColors.textInverse,
-                  );
-                },
+      body: StreamBuilder<DeviceSnapshot>(
+        stream: RtdbService.instance.deviceStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Error: ${snapshot.error}',
+                style: AppTextStyles.bodyMedium,
               ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'John Doe',
-                  style: AppTextStyles.titleLarge.copyWith(
-                    color: AppColors.textInverse,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Device Wearer',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textInverse.withValues(alpha: 0.8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.edit_rounded, color: AppColors.textInverse),
-            onPressed: () {
-              // Edit profile
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDeviceSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Paired Device', style: AppTextStyles.titleMedium),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border, width: 1),
-          ),
-          child: Row(
+            );
+          }
+          final data = snapshot.data ?? DeviceSnapshot.empty();
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.primarySurface,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.watch_rounded,
-                  color: AppColors.primary,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
+              _ActuatorsCard(data.actuators),
+              const SizedBox(height: 16),
+              _UpdatesCard(data),
+              const SizedBox(height: 16),
+              _InfoCard(),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Actuators card
+// ---------------------------------------------------------------------------
+
+class _ActuatorsCard extends StatelessWidget {
+  final ActuatorData actuators;
+  const _ActuatorsCard(this.actuators);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Actuators', style: AppTextStyles.titleMedium),
+          const SizedBox(height: 16),
+          Row(
+            children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _device.name,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          _device.isConnected
-                              ? Icons.bluetooth_connected_rounded
-                              : Icons.bluetooth_disabled_rounded,
-                          size: 14,
-                          color: _device.isConnected
-                              ? AppColors.statusConnected
-                              : AppColors.statusDisconnected,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _device.statusLabel,
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: _device.isConnected
-                                ? AppColors.statusConnected
-                                : AppColors.statusDisconnected,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                child: _ActuatorTile(
+                  icon: Icons.volume_up_rounded,
+                  label: 'Buzzer',
+                  active: actuators.buzzer,
+                  activeColor: AppColors.warning,
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _ActuatorTile(
+                  icon: Icons.lightbulb_rounded,
+                  label: 'LED',
+                  active: actuators.led,
+                  activeColor: AppColors.secondary,
+                ),
+              ),
             ],
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildContactsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Trusted Contacts', style: AppTextStyles.titleMedium),
-            TextButton.icon(
-              onPressed: () => _showAddContactDialog(),
-              icon: const Icon(Icons.add_rounded, size: 18),
-              label: const Text('Add'),
+          if (actuators.timestamp.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Updated: ${_formatTs(actuators.timestamp)}',
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.textTertiary,
+              ),
             ),
           ],
-        ),
-        const SizedBox(height: 12),
-        AppSearchBar(
-          hintText: 'Search contacts...',
-          controller: _searchController,
-          onChanged: (value) {
-            setState(() {
-              _searchQuery = value;
-            });
-          },
-          onClear: () {
-            setState(() {
-              _searchQuery = '';
-            });
-          },
-        ),
-        const SizedBox(height: 12),
-        ..._filteredContacts.map((contact) => _buildContactCard(contact)),
-      ],
+        ],
+      ),
     );
   }
+}
 
-  Widget _buildContactCard(Contact contact) {
+class _ActuatorTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool active;
+  final Color activeColor;
+  const _ActuatorTile({
+    required this.icon,
+    required this.label,
+    required this.active,
+    required this.activeColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: active
+            ? activeColor.withValues(alpha: 0.12)
+            : AppColors.backgroundSecondary,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border, width: 1),
+        border: Border.all(
+          color: active ? activeColor.withValues(alpha: 0.5) : AppColors.border,
+        ),
       ),
-      child: Row(
+      child: Column(
         children: [
+          Icon(
+            icon,
+            color: active ? activeColor : AppColors.textTertiary,
+            size: 32,
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: AppTextStyles.labelMedium),
+          const SizedBox(height: 4),
           Container(
-            width: 48,
-            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
             decoration: BoxDecoration(
-              color: AppColors.primarySurface,
-              shape: BoxShape.circle,
+              color: active
+                  ? activeColor.withValues(alpha: 0.15)
+                  : AppColors.border,
+              borderRadius: BorderRadius.circular(20),
             ),
-            child: Center(
-              child: Text(
-                contact.initials,
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
-                ),
+            child: Text(
+              active ? 'ON' : 'OFF',
+              style: AppTextStyles.labelSmall.copyWith(
+                color: active ? activeColor : AppColors.textTertiary,
+                fontWeight: FontWeight.w700,
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      contact.name,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (contact.isEmergencyContact) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.dangerLevel3.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'Emergency',
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.dangerLevel3,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  contact.typeLabel,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.phone_rounded),
-            color: AppColors.primary,
-            onPressed: () {
-              // Call contact
-            },
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'edit') {
-                // Edit contact
-              } else if (value == 'delete') {
-                setState(() {
-                  _contacts.remove(contact);
-                });
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    Icon(Icons.edit_rounded, size: 18),
-                    SizedBox(width: 8),
-                    Text('Edit'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.delete_rounded,
-                      size: 18,
-                      color: AppColors.error,
-                    ),
-                    SizedBox(width: 8),
-                    Text('Delete', style: TextStyle(color: AppColors.error)),
-                  ],
-                ),
-              ),
-            ],
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildSettingsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Settings', style: AppTextStyles.titleMedium),
-        const SizedBox(height: 12),
-        _buildSettingItem(
-          icon: Icons.notifications_rounded,
-          title: 'Push Notifications',
-          subtitle: 'Receive alerts on your device',
-          trailing: Switch(
-            value: _notificationsEnabled,
-            onChanged: (value) {
-              setState(() {
-                _notificationsEnabled = value;
-              });
-            },
-          ),
-        ),
-        _buildSettingItem(
-          icon: Icons.location_on_rounded,
-          title: 'Location Services',
-          subtitle: 'Allow app to access location',
-          trailing: Switch(
-            value: _locationEnabled,
-            onChanged: (value) {
-              setState(() {
-                _locationEnabled = value;
-              });
-            },
-          ),
-        ),
-        _buildSettingItem(
-          icon: Icons.language_rounded,
-          title: 'Language',
-          subtitle: 'English',
-          trailing: const Icon(Icons.chevron_right_rounded),
-          onTap: () {
-            // Show language selection
-          },
-        ),
-        _buildSettingItem(
-          icon: Icons.dark_mode_rounded,
-          title: 'Dark Mode',
-          subtitle: 'Use system theme',
-          trailing: const Icon(Icons.chevron_right_rounded),
-          onTap: () {
-            // Show theme selection
-          },
-        ),
-      ],
-    );
-  }
+// ---------------------------------------------------------------------------
+// Last-update timestamps for all nodes
+// ---------------------------------------------------------------------------
 
-  Widget _buildSettingItem({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    Widget? trailing,
-    VoidCallback? onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border, width: 1),
-      ),
-      child: ListTile(
-        leading: Icon(icon, color: AppColors.primary),
-        title: Text(title, style: AppTextStyles.bodyMedium),
-        subtitle: Text(
-          subtitle,
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textTertiary,
-          ),
-        ),
-        trailing: trailing,
-        onTap: onTap,
+class _UpdatesCard extends StatelessWidget {
+  final DeviceSnapshot data;
+  const _UpdatesCard(this.data);
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = [
+      _TsEntry('System', data.system.timestamp),
+      _TsEntry('IMU', data.imu.timestamp),
+      _TsEntry('GPS', data.gps.timestamp),
+      _TsEntry('Alerts', data.alerts.timestamp),
+      _TsEntry('Audio', data.audio.timestamp),
+      _TsEntry('Actuators', data.actuators.timestamp),
+    ];
+    return _Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Last Updates', style: AppTextStyles.titleMedium),
+          const SizedBox(height: 12),
+          ...rows.map((e) => _TsRow(entry: e)),
+        ],
       ),
     );
   }
+}
 
-  Widget _buildAppInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('About', style: AppTextStyles.titleMedium),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.backgroundSecondary,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.security_rounded,
-                    color: AppColors.primary,
-                    size: 48,
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Protectra',
-                        style: AppTextStyles.titleLarge.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Text(
-                        'Safety Device Companion',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _buildInfoRow('Version', '1.0.0'),
-              _buildInfoRow('Build', '1'),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  // Show privacy policy
-                },
-                child: const Text('Privacy Policy'),
-              ),
-              TextButton(
-                onPressed: () {
-                  // Show terms of service
-                },
-                child: const Text('Terms of Service'),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+class _TsEntry {
+  final String label;
+  final String timestamp;
+  const _TsEntry(this.label, this.timestamp);
+}
 
-  Widget _buildInfoRow(String label, String value) {
+class _TsRow extends StatelessWidget {
+  final _TsEntry entry;
+  const _TsRow({required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            entry.label,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          Text(
+            entry.timestamp.isEmpty ? '—' : _formatTs(entry.timestamp),
+            style: AppTextStyles.labelMedium.copyWith(
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// App info
+// ---------------------------------------------------------------------------
+
+class _InfoCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Device Info', style: AppTextStyles.titleMedium),
+          const SizedBox(height: 12),
+          _InfoRow('App', 'Protectra'),
+          _InfoRow('Database', 'rpi-prototype (asia-southeast1)'),
+          _InfoRow('Platform', 'Firebase RTDB'),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _InfoRow(this.label, this.value);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
             style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textTertiary,
+              color: AppColors.textSecondary,
             ),
           ),
-          Text(
-            value,
-            style: AppTextStyles.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showAddContactDialog() {
-    final nameController = TextEditingController();
-    final phoneController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Contact'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                hintText: 'Enter contact name',
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: phoneController,
-              decoration: const InputDecoration(
-                labelText: 'Phone Number',
-                hintText: 'Enter phone number',
-              ),
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<ContactType>(
-              decoration: const InputDecoration(labelText: 'Relationship'),
-              value: ContactType.parent,
-              items: ContactType.values.map((type) {
-                return DropdownMenuItem(value: type, child: Text(type.label));
-              }).toList(),
-              onChanged: (value) {},
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.isNotEmpty) {
-                setState(() {
-                  _contacts.add(
-                    Contact.mock(
-                      name: nameController.text,
-                      phoneNumber: phoneController.text,
-                    ),
-                  );
-                });
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Add'),
           ),
         ],
       ),
@@ -625,17 +280,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-extension ContactTypeExtension on ContactType {
-  String get label {
-    switch (this) {
-      case ContactType.parent:
-        return 'Parent';
-      case ContactType.guardian:
-        return 'Guardian';
-      case ContactType.friend:
-        return 'Friend';
-      case ContactType.relative:
-        return 'Relative';
-    }
+// ---------------------------------------------------------------------------
+// Shared card wrapper
+// ---------------------------------------------------------------------------
+
+class _Card extends StatelessWidget {
+  final Widget child;
+  const _Card({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: child,
+    );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Helper
+// ---------------------------------------------------------------------------
+
+String _formatTs(String ts) {
+  if (ts.isEmpty) return '—';
+  try {
+    final parts = ts.split('_');
+    if (parts.length == 2) {
+      final date = parts[0];
+      final time = parts[1].replaceAll('-', ':');
+      return '$date  $time';
+    }
+  } catch (_) {}
+  return ts;
 }

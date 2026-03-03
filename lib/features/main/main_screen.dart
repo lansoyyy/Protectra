@@ -5,7 +5,6 @@ import '../../../core/theme/app_text_styles.dart';
 import 'home/home_screen.dart';
 import 'alerts/alerts_screen.dart';
 import 'location/location_screen.dart';
-import 'timeline/timeline_screen.dart';
 import 'profile/profile_screen.dart';
 
 /// Main screen with bottom navigation for Protectra app
@@ -23,7 +22,6 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     AlertsScreen(),
     LocationScreen(),
-    TimelineScreen(),
     ProfileScreen(),
   ];
 
@@ -44,14 +42,9 @@ class _MainScreenState extends State<MainScreen> {
       label: 'Location',
     ),
     NavigationItem(
-      icon: Icons.history_outlined,
-      activeIcon: Icons.history_rounded,
-      label: 'Timeline',
-    ),
-    NavigationItem(
-      icon: Icons.person_outline,
-      activeIcon: Icons.person_rounded,
-      label: 'Profile',
+      icon: Icons.device_hub_outlined,
+      activeIcon: Icons.device_hub_rounded,
+      label: 'Status',
     ),
   ];
 
