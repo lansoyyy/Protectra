@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "797256688988",
+    "firebase_url": "https://rpi-prototype-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "rpi-prototype",
+    "storage_bucket": "rpi-prototype.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:797256688988:android:858ea754f960b14f04cd99",
+        "android_client_info": {
+          "package_name": "com.example.protectra"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAL_J4T7HhHZhMWusSdjj6dbXI-3EMA5EY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

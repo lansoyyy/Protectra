@@ -1,11 +1,20 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:simbayanan/firebase_options.dart';
 import 'core/theme/app_theme.dart';
 import 'features/onboarding/splash_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/pairing/pairing_screen.dart';
 import 'features/main/main_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    name: 'rpi-prototype',
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const MyApp());
 }
 
